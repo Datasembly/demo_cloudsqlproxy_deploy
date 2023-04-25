@@ -1,0 +1,13 @@
+cloudsqlproxy:
+  credentials: &gcpServiceAccount "Overwritten by secret manager"
+  secretName: "Overwritten by secret manager"
+
+cloudsqlproxyInstances:
+  - name: cloudsqlproxydev
+    instancesFlag: -instances=datasembly-dev:us-east1:dsdev=tcp:0.0.0.0:3307
+    port: 3307
+    memory: "512Mi"
+  - name: cloudsqlproxyprod
+    instancesFlag: -instances=eminent-prism-112521:us-east1:dsprod2=tcp:0.0.0.0:3307
+    port: 3308
+    memory: "512Mi"

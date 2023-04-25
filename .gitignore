@@ -1,0 +1,8 @@
+*.iml
+.idea
+out.yaml
+*.sublime-*
+# Decrypted secrets files
+*.yaml.dec
+*.log
+charts/

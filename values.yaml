@@ -1,0 +1,6 @@
+cloudsqlproxy:
+  name: cloudsqlproxy
+  replicas: 1
+  imageRepository: gcr.io/cloudsql-docker
+  imageName: gce-proxy
+  imageTag: 1.33.2

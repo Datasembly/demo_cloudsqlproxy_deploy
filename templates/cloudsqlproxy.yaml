@@ -1,0 +1,66 @@
+{{ range $index, $instance := .Values.cloudsqlproxyInstances }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ $.Release.Name }}
+  name: {{ $instance.name }}
+  labels:
+    app: {{ $instance.name }}
+spec:
+  replicas: {{ $instance.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $instance.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $instance.name }}
+    spec:
+      containers:
+      - name: {{ $instance.name }}
+        image: {{ $.Values.cloudsqlproxy.imageRepository }}/{{ $.Values.cloudsqlproxy.imageName }}:{{ $.Values.cloudsqlproxy.imageTag }}
+        resources:
+            requests:
+                memory: {{ $instance.memory }}
+        command: ["/cloud_sql_proxy",
+                  {{ $instance.instancesFlag | quote }},
+                  "-credential_file=/secrets/cloudsql/credentials.json"]
+        volumeMounts:
+        - name: {{ $.Values.cloudsqlproxy.secretName }}
+          mountPath: /secrets/cloudsql
+          readOnly: true
+      volumes:
+      - name: {{ $.Values.cloudsqlproxy.secretName }}
+        secret:
+          secretName: {{ $.Values.cloudsqlproxy.secretName }}
+      - name: cloudsql
+        emptyDir: 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ $.Release.Name }}
+  name: {{ $instance.name }}
+  labels:
+    app: {{ $instance.name }}
+spec:
+  type: ClusterIP
+  ports:
+  - port: {{ $instance.port }}
+    name: db
+    targetPort: {{ $instance.port }}
+  selector:
+    app: {{ $instance.name }}
+---
+{{ end }}
+
+# Service Account Token secret for cloud proxy
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+    name: {{ .Values.cloudsqlproxy.secretName }}
+data:
+    # This will get pulled out into values.yaml I think
+    credentials.json: {{ .Values.cloudsqlproxy.credentials }}
+
