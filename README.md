@@ -34,3 +34,26 @@ To deploy the helm chart to a cluster:
   * `.` is the path to the helm chart you are installing
   * If this is a brand-new cluster, use `install` instead of `upgrade`
 * If the dry run looks correct, you can run the command again without the dry-run and debug flags
+
+### When should I do a deployment?
+You should do a deployment anytime you need to change the configuration of one of our services.  This includes things like:
+* Resources: upgrading the memory of a service
+* Replicas: How many pods should be running
+* Networking configurations: Ex. adding a new service to our package and creating a new URL for it
+* Environment Variables: All of our services rely on environment variables; any change will require a new deployment
+* Dependency updates: Bump version numbers for the charts referenced in [Chart.yaml](./Chart.yaml) and [values.yaml](./values.yaml),
+then run `helm dependency update` to update [Chart.lock](./Chart.lock).
+  * [Chart.yaml](./Chart.yaml):
+    * ingress-nginx: https://github.com/kubernetes/ingress-nginx/releases?q=%22helm-chart%22&expanded=true
+    * cert-manager: https://charts.jetstack.io
+  * [values.yaml](./values.yaml):
+    * cloudsqlproxy: https://console.cloud.google.com/gcr/images/cloudsql-docker/global/gce-proxy
+
+## Rolling back
+Sometimes we push code that makes our app unusable.  If this happens in our dev environment, not to worry, we should focus on fixing the code and pushing the fix.  
+If we notice that our prod environment is broken, then our rollback plan is easy:
+* Identify which service if broken, and figure out the previous version of that service
+* Update the `imageTag` property in the corresponding `values-[ENV].yaml` file
+* Deploy the helm chart to the proper cluster.  The broken image should be rolled back to the previous good image
+
+Remember to use the `--atomic` flag when performing Helm upgrades to automatically roll back changes on a failed deployment.
